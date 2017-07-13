@@ -17,6 +17,7 @@ GetFuncArgs() - Get function's arguments.
 CheckFuncArgs(opr) - Checking for function's operand.
 
 '''
+register_maps = ['rax', 'eax', 'rdi', 'rsi', 'r8', 'rdx', 'rcx', 'r9', 'edi', 'esi', 'edx', 'ecx']
 class register:
     def __init__(self):
         for reg in register_maps:
@@ -92,6 +93,7 @@ After that, different routines are executed according to each instruction.
 def HexRay64(address):
     # Routine of Initializing local varibles.
     re_find = lambda opr: re.findall(r"var_([0-9a-fA-F]+)\]", opr)
+    convert = lambda x : repr(x.strip('\'')) if '\\' in repr(x) else x
     source = ""
     pre_process = ""
     ret_type = ""
@@ -149,7 +151,7 @@ def HexRay64(address):
              mov <mem>,<const>
 
         '''
-        if ins == "mov":
+        if ins =e "mov":
             # Current function's arguments setting
             if len(re_find(opr1)) != 0 and r.CheckFuncArgs(opr2):
                 if index != 0:
@@ -620,6 +622,27 @@ def Main():
     print "[+] Start Hex-rays."
     file_type = get_file_type_name()
     path_ = idaapi.get_input_file_path()
+
+    if file_type.find("x86-64") != -1:      # 64bit binary 
+        f = open(path_ + '.c', 'wb')
+        convert = lambda x : repr(x.strip('\'')) if '\\' in repr(x) else x
+        # ====================================================
+        f.write(HexRay64(FuncList[5]))  # need to modify
+        f.write(HexRay64(FuncList[6]))  # need to modify, too
+        # ====================================================
+    elif file_type.find("Intel 386") != -1: # 32bit binary
+        f = open(path_ + '.c', 'wb')
+        # ====================================================
+        f.write(HexRay32(FuncList[6]))
+        # ====================================================
+
+    f.close()
+    print "[*] {}{}{}".format('-'*20, path_+'.c', '-'*20)
+    print open(path_ + '.c', 'rb').read()
+    print "[*] {}\n\n".format('-'*70)
+    print "[*] Success Convering."
+
+    '''
     try:
         if file_type.find("x86-64") != -1:      # 64bit binary 
             f = open(path_ + '.c', 'wb')
@@ -642,6 +665,6 @@ def Main():
     except:
         f.close()
         print "[-] Not supported."
-
+    '''
 if __name__ == '__main__':
     Main()
